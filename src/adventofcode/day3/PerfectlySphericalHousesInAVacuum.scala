@@ -43,7 +43,7 @@ case object PerfectlySphericalHousesInAVacuum extends Puzzle[Seq[(Int,Int)],Int]
 
   def partition[T](seq: Seq[T]) = {
     val (even, odd) = seq.zipWithIndex partition {_._2 % 2 == 0}
-    List(even map {_._1}, odd map {_._1})
+    List(even, odd) map {_ map {pair => pair._1}}
   }
 
   def part2(moves: Seq[(Int, Int)]): Int =
