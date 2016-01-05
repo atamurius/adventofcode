@@ -5,6 +5,8 @@ trait Puzzle[D,R] {
 
   def part1(input: D): R
   def part2(input: D): R
+
+  def title = toString.replaceAll("([A-Z][a-z]*)", "$1 ").trim
 }
 
 object Puzzle {
