@@ -57,15 +57,13 @@ case object AllInASingleNight extends Puzzle[Distances,Int] {
 
   def findBestFrom(path: Path)(implicit ds: Distances, better: (Path,Path) => Boolean): Option[Path] = {
     if (ds.cities exists path.canFlyTo) {
-      var best = Option.empty[Path]
-      for (city <- ds.cities if path canFlyTo city) {
-        best = (best, findBestFrom(path to city)) match {
+      (ds.cities filter path.canFlyTo foldLeft Option.empty[Path]) {(best,city) =>
+        (best, findBestFrom(path to city)) match {
           case (None, Some(p)) => Some(p)
           case (Some(b), Some(p)) if better(p,b) => Some(p)
           case _ => best
         }
       }
-      best
     }
     else
       Some(path)
