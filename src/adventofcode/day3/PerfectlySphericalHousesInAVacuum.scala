@@ -2,7 +2,9 @@ package adventofcode.day3
 
 import adventofcode.{Test, Puzzle}
 
-/*
+/* --- Day 3: Perfectly Spherical Houses in a Vacuum ---
+ * http://adventofcode.com/day/3
+ *
  * Santa is delivering presents to an infinite two-dimensional grid of houses.
  *
  * He begins by delivering a present to the house at his starting location,

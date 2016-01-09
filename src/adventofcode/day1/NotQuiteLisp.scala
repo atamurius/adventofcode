@@ -2,7 +2,9 @@ package adventofcode.day1
 
 import adventofcode._
 
-/*
+/* --- Day 1: Not Quite Lisp ---
+ * http://adventofcode.com/day/1
+ *
  * Santa is trying to deliver presents in a large apartment building,
  * but he can't find the right floor - the directions he got are a little confusing.
  * He starts on the ground floor (floor 0) and then follows the instructions one character at a time.

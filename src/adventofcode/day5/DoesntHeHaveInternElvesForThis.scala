@@ -2,7 +2,9 @@ package adventofcode.day5
 
 import adventofcode.{Test, Puzzle}
 
-/*
+/* --- Day 5: Doesn't He Have Intern-Elves For This? ---
+ * http://adventofcode.com/day/5
+ *
  * Santa needs help figuring out which strings in his text file are naughty or nice.
  *
  * Part 1:

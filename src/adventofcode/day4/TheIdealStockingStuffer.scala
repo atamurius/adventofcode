@@ -3,7 +3,9 @@ package adventofcode.day4
 import java.security.MessageDigest
 import adventofcode.{Test, Puzzle}
 
-/*
+/* --- Day 4: The Ideal Stocking Stuffer ---
+ * http://adventofcode.com/day/4
+ *
  * Santa needs help mining some AdventCoins (very similar to bitcoins) to use as gifts
  * for all the economically forward-thinking little girls and boys.
  *

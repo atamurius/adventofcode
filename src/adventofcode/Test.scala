@@ -26,6 +26,14 @@ class Test[D,T](puzzle: Puzzle[D,T]) extends App {
     }
   }
 
+  def assert[R](msg: String, actual: R, expected: R): Unit = {
+    if (actual != expected)
+      throw new AssertionError(
+        s"${puzzle.title} test $msg expected to be $expected, but is $actual")
+    else
+      println(s"${puzzle.title} test $msg passed")
+  }
+
   object Part1 extends Part("Part 1", puzzle.part1)
   object Part2 extends Part("Part 2", puzzle.part2)
 
