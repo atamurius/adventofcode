@@ -19,7 +19,7 @@ import adventofcode.{Test, Puzzle}
  * Now find one that starts with six zeroes.
  */
 
-case object TheIdealStockingStuffer extends Puzzle.Simple[Int] {
+case object TheIdealStockingStuffer extends Puzzle.Results[Int] {
 
   val md5Digest = MessageDigest getInstance "MD5"
 

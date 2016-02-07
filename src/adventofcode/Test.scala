@@ -2,9 +2,9 @@ package adventofcode
 
 import scala.io.Source
 
-class Test[D,T](puzzle: Puzzle[D,T]) extends App {
+class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
 
-  var testFailed = false
+  private var testFailed = false
 
   class Case[R](label: String, actual: R) {
     def gives(expected: R) {

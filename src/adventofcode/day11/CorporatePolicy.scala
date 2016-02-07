@@ -27,7 +27,7 @@ import adventofcode.{Test, Puzzle}
   * Part 1:
   * Given Santa's current password (your puzzle input), what should his next password be?
   */
-case object CorporatePolicy extends Puzzle.Simple[String] {
+case object CorporatePolicy extends Puzzle.Results[String] {
 
   def next(s: Array[Char]): Unit = {
     var o = 1
@@ -64,7 +64,7 @@ case object CorporatePolicy extends Puzzle.Simple[String] {
 
 object Solution extends Test(CorporatePolicy) {
 
-  Test(CorporatePolicy.nextString) labeled "next" forall (
+  Test(puzzle.nextString) labeled "next" forall (
     "aaa" -> "aab",
     "aaz" -> "aba",
     "azz" -> "baa")

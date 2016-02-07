@@ -1,6 +1,7 @@
 package adventofcode
 
-trait Puzzle[D,R] {
+abstract class Puzzle[D,R] {
+
   def parse(input: String): D
 
   def part1(input: D): R
@@ -11,7 +12,7 @@ trait Puzzle[D,R] {
 
 object Puzzle {
 
-  trait Simple[T] extends Puzzle[String,T] {
+  abstract class Results[T] extends Puzzle[String,T] {
     def parse(input: String): String = input
   }
 }
