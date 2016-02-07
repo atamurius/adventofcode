@@ -1,4 +1,4 @@
-package adventofcode.day13
+package adventofcode.day24
 
 import adventofcode.{Test, Puzzle}
 
