@@ -38,7 +38,7 @@ case object CorporatePolicy extends Puzzle.Simple[String] {
     }
   }
 
-  def next(s: String): String = { val a = s.toCharArray; next(a); new String(a) }
+  def nextString(s: String): String = { val a = s.toCharArray; next(a); new String(a) }
 
   def strait(s: Array[Char]) = s sliding 3 exists {
     case Array(a,b,c) => a + 1 == b && b + 1 == c
@@ -64,11 +64,10 @@ case object CorporatePolicy extends Puzzle.Simple[String] {
 
 object Solution extends Test(CorporatePolicy) {
 
-  List( "aaa" -> "aab"
-      , "aaz" -> "aba"
-      , "azz" -> "baa") foreach {case (arg,res) =>
-    assert(s"next $arg", CorporatePolicy.next(arg), res)
-  }
+  Test(CorporatePolicy.nextString) labeled "next" forall (
+    "aaa" -> "aab",
+    "aaz" -> "aba",
+    "azz" -> "baa")
 
   Part1 on "abcdefgh" gives "abcdffaa"
   Part1 on "ghijklmn" gives "ghjaabcc"

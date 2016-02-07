@@ -133,7 +133,8 @@ object Solution extends Test(SomeAssemblyRequired) {
     "NOT y -> i"
   ).mkString("\n")
 
-  Map("x" -> 123,
+  Test(test.valueOf) labeled "wire" forall (
+      "x" -> 123,
       "y" -> 456,
       "d" -> 72,
       "e" -> 507,
@@ -141,9 +142,7 @@ object Solution extends Test(SomeAssemblyRequired) {
       "g" -> 114,
       "h" -> 65412,
       "i" -> 65079
-  ) foreach { case (w,exp) =>
-    assert(s"wire $w", test valueOf w, exp)
-  }
+  )
 
   Part2 solveFrom "input.txt"
 }

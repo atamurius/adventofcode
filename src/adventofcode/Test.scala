@@ -6,8 +6,19 @@ class Test[D,T](puzzle: Puzzle[D,T]) extends App {
 
   var testFailed = false
 
+  class Case[R](label: String, actual: R) {
+    def gives(expected: R) {
+      if (actual != expected) {
+        println(s"[ERR] ${puzzle.title} $label expected to be $expected, but is $actual")
+        testFailed = true
+      }
+      else
+        println(s"[OK ] $label passed")
+    }
+  }
+
   class Part(name: String, f: D => T) {
-    def on(input: String) = new Case(input)
+    def on(input: String) = new Case(s"$name on $input", f(puzzle parse input))
     def solve(input: String): Unit = {
       if (testFailed) return
       val start = System.currentTimeMillis
@@ -20,26 +31,23 @@ class Test[D,T](puzzle: Puzzle[D,T]) extends App {
         puzzle.getClass.getResource(file).toURI).
         mkString)
     }
-    class Case(input: String) {
-      def gives(expected: T) {
-        val actual = f(puzzle parse input)
-        if (actual != expected) {
-          println(s"[ERR] ${puzzle.title} $name on $input expected to be $expected, but is $actual")
-          testFailed = true
-        }
-        else
-          println(s"[OK ] $name test on $input passed")
-      }
-    }
   }
 
-  def assert[R](msg: String, actual: R, expected: R): Unit = {
-    if (actual != expected) {
-      println(s"[ERR] ${puzzle.title} test $msg expected to be $expected, but is $actual")
-      testFailed = true
+  private var testCnt = 0
+
+  case class Test[A,B](f: A => B) {
+    var label = s"Test ${testCnt += 1}"
+    def labeled(label: String) = { this.label = label; this }
+    def on(arg: A) = new Case(s"$label on $arg", f(arg))
+    def forall(pairs: (A,B)*) = pairs foreach {case (arg, expected) =>
+      val actual = f(arg)
+      if (actual != expected) {
+        println(s"[ERR] ${puzzle.title} $label on $arg expected to be $expected, but is $actual")
+        testFailed = true
+      }
+      else
+        println(s"[OK ] $label on $arg passed")
     }
-    else
-      println(s"[OK ] ${puzzle.title} test $msg passed")
   }
 
   object Part1 extends Part("Part 1", puzzle.part1)

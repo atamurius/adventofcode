@@ -26,6 +26,8 @@ case object ElvesLookElvesSay extends Puzzle[(List[Char],Int),Int] {
   override def parse(input: String): (List[Char], Int) =
     (input split ",").toSeq match {case Seq(str,num) => (str.toList, num.toInt)}
 
+  def nextString(s: String): String = next(s.toList).mkString
+
   def next(s: List[Char]) = {
     def num(n: Int) = n.toString.toList.reverse
     @tailrec
@@ -47,13 +49,12 @@ case object ElvesLookElvesSay extends Puzzle[(List[Char],Int),Int] {
 
 object Solution extends Test(ElvesLookElvesSay) {
 
-  for ((arg, res) <- List
-      ( "1" -> "11"
-      , "11" -> "21"
-      , "21" -> "1211"
-      , "1211" -> "111221"
-      , "111221" -> "312211"))
-    assert(s"next $arg", (ElvesLookElvesSay next arg.toList).mkString, res)
+  Test(ElvesLookElvesSay.nextString) labeled "next" forall (
+    "1" -> "11",
+    "11" -> "21",
+    "21" -> "1211",
+    "1211" -> "111221",
+    "111221" -> "312211")
 
   Part1 solve "1321131112,40"
 

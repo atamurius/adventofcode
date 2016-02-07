@@ -206,22 +206,19 @@ object Solution extends Test(JSAbacusFramework) {
 
   import Json._
 
-  List[(String, Value)](
-    "123"         -> 123,
-    "-23"         -> -23,
-    "\"\""        -> "",
-    "\"test\""    -> "test",
-    "[]"          -> Nil,
-    "[1]"         -> array(1),
-    "[1,2]"       -> array(1,2),
-    "[1,\"a\",2]" -> array(1,"a",2),
-    "{}"          -> Object(Map()),
-    "{\"a\":2}"   -> Object(Map("a" -> 2)),
+  Test(Json.parse) labeled "parse" forall (
+    "123"               -> 123,
+    "-23"               -> -23,
+    "\"\""              -> "",
+    "\"test\""          -> "test",
+    "[]"                -> Nil,
+    "[1]"               -> array(1),
+    "[1,2]"             -> array(1,2),
+    "[1,\"a\",2]"       -> array(1,"a",2),
+    "{}"                -> Object(Map()),
+    "{\"a\":2}"         -> Object(Map("a" -> 2)),
     "{\"a\":1,\"b\":2}" -> Object(Map("a" -> 1, "b" -> 2))
-
-  ) foreach {case (text, json) =>
-    assert("parse "+ text, Json.parse(text), json)
-  }
+  )
 
   Part1 solveFrom "input.json"
   Part2 solveFrom "input.json"
