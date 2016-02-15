@@ -1,4 +1,4 @@
-package adventofcode
+package adventofcode.common
 
 abstract class Puzzle[D,R] {
 

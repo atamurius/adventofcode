@@ -1,9 +1,8 @@
-package adventofcode.day11
+package adventofcode
 
-import adventofcode.{Test, Puzzle}
+import adventofcode.common.Puzzle
 
 /** --- Day 11: Corporate Policy ---
-  * http://adventofcode.com/day/11
   *
   * Santa's previous password expired, and he needs help choosing a new one.
   *
@@ -27,51 +26,53 @@ import adventofcode.{Test, Puzzle}
   * Part 1:
   * Given Santa's current password (your puzzle input), what should his next password be?
   */
-case object CorporatePolicy extends Puzzle.Results[String] {
+object Day11 {
+  case object CorporatePolicy extends Puzzle.Results[String] {
 
-  def next(s: Array[Char]): Unit = {
-    var o = 1
-    for (i <- s.indices.reverse) {
-      val v = s(i) - 'a' + o
-      s(i) = (v % ('z' - 'a' + 1) + 'a').asInstanceOf[Char]
-      o = v / ('z' - 'a' + 1)
+    def next(s: Array[Char]): Unit = {
+      var o = 1
+      for (i <- s.indices.reverse) {
+        val v = s(i) - 'a' + o
+        s(i) = (v % ('z' - 'a' + 1) + 'a').asInstanceOf[Char]
+        o = v / ('z' - 'a' + 1)
+      }
     }
+
+    def nextString(s: String): String = { val a = s.toCharArray; next(a); new String(a) }
+
+    def strait(s: Array[Char]) = s sliding 3 exists {
+      case Array(a,b,c) => a + 1 == b && b + 1 == c
+    }
+
+    def forbidden(s: Array[Char]) = s exists {"iol" contains _}
+
+    def pairs(s: List[Char]): Int = s match {
+      case a :: b :: rest if a == b => 1 + pairs(rest)
+      case Nil => 0
+      case a :: rest => pairs(rest)
+    }
+
+    def part1(input: String) = {
+      val pass = input.toCharArray
+      do next(pass)
+      while (! strait(pass) || forbidden(pass) || pairs(pass.toList) < 2)
+      new String(pass)
+    }
+
+    def part2(input: String) = part1(input)
   }
 
-  def nextString(s: String): String = { val a = s.toCharArray; next(a); new String(a) }
+  object Solution extends Test(CorporatePolicy) {
 
-  def strait(s: Array[Char]) = s sliding 3 exists {
-    case Array(a,b,c) => a + 1 == b && b + 1 == c
+    Test(puzzle.nextString) labeled "next" forall (
+      "aaa" -> "aab",
+      "aaz" -> "aba",
+      "azz" -> "baa")
+
+    Part1 on "abcdefgh" gives "abcdffaa"
+    Part1 on "ghijklmn" gives "ghjaabcc"
+
+    Part1 solve "hxbxwxba"
+    Part2 solve "hxbxxyzz"
   }
-
-  def forbidden(s: Array[Char]) = s exists {"iol" contains _}
-
-  def pairs(s: List[Char]): Int = s match {
-    case a :: b :: rest if a == b => 1 + pairs(rest)
-    case Nil => 0
-    case a :: rest => pairs(rest)
-  }
-
-  def part1(input: String) = {
-    val pass = input.toCharArray
-    do next(pass)
-    while (! strait(pass) || forbidden(pass) || pairs(pass.toList) < 2)
-    new String(pass)
-  }
-
-  def part2(input: String) = part1(input)
-}
-
-object Solution extends Test(CorporatePolicy) {
-
-  Test(puzzle.nextString) labeled "next" forall (
-    "aaa" -> "aab",
-    "aaz" -> "aba",
-    "azz" -> "baa")
-
-  Part1 on "abcdefgh" gives "abcdffaa"
-  Part1 on "ghijklmn" gives "ghjaabcc"
-
-  Part1 solve "hxbxwxba"
-  Part2 solve "hxbxxyzz"
 }

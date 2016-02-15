@@ -1,9 +1,8 @@
-package adventofcode.day6
+package adventofcode
 
-import adventofcode.{Test, Puzzle}
+import adventofcode.common.{Puzzle, Test}
 
-/* --- Day 6: Probably a Fire Hazard ---
- * http://adventofcode.com/day/6
+/** --- Day 6: Probably a Fire Hazard ---
  *
  * Because your neighbors keep defeating you in the holiday house decorating contest
  * year after year, you've decided to deploy one million lights in a 1000x1000 grid.
@@ -39,56 +38,59 @@ import adventofcode.{Test, Puzzle}
  *
  * What is the total brightness of all lights combined after following Santa's instructions?
  */
+object Day06 {
 
-case class
-  Instruction( op: String,
-               x1: Int,
-               y1: Int,
-               x2: Int,
-               y2: Int) {
+  case class
+    Instruction( op: String,
+                 x1: Int,
+                 y1: Int,
+                 x2: Int,
+                 y2: Int) {
 
-  import Math.{min,max}
+    import Math.{max, min}
 
-  val left   = min(x1,x2)
-  val top    = min(y1,y2)
-  val right  = max(x1,x2)
-  val bottom = max(y1,y2)
+    val left   = min(x1,x2)
+    val top    = min(y1,y2)
+    val right  = max(x1,x2)
+    val bottom = max(y1,y2)
 
-  def map(array: Array[Array[Int]])(f: ((Int,String)) => Int) = for {
-    x <- left to right
-    y <- top to bottom
-  } array(y)(x) = f( array(y)(x), op )
-}
-
-case object ProbablyAFireHazard extends Puzzle[Seq[Instruction],Int] {
-  val pattern = """^(turn (on|off)|toggle) (\d+),(\d+) through (\d+),(\d+)$""".r
-
-  def parse(input: String) = input split "\n" map {
-    case pattern(op, _,x1,y1,x2,y2) => Instruction(op, x1.toInt, y1.toInt, x2.toInt, y2.toInt)
+    def map(array: Array[Array[Int]])(f: ((Int,String)) => Int) = for {
+      x <- left to right
+      y <- top to bottom
+    } array(y)(x) = f( array(y)(x), op )
   }
 
-  def part1(input: Seq[Instruction]) = {
-    val array = Array.ofDim[Int](1000,1000)
-    input foreach {_.map(array) {
-      case (_, "turn on")  => 1
-      case (_, "turn off") => 0
-      case (0, "toggle")   => 1
-      case (1, "toggle")   => 0
-    }}
-    (array map {_ count {_ == 1}}).sum
+  case object ProbablyAFireHazard extends Puzzle[Seq[Instruction],Int] {
+    val pattern = """^(turn (on|off)|toggle) (\d+),(\d+) through (\d+),(\d+)$""".r
+
+    def parse(input: String) = input split "\n" map {
+      case pattern(op, _,x1,y1,x2,y2) => Instruction(op, x1.toInt, y1.toInt, x2.toInt, y2.toInt)
+    }
+
+    def part1(input: Seq[Instruction]) = {
+      val array = Array.ofDim[Int](1000,1000)
+      input foreach {_.map(array) {
+        case (_, "turn on")  => 1
+        case (_, "turn off") => 0
+        case (0, "toggle")   => 1
+        case (1, "toggle")   => 0
+      }}
+      (array map {_ count {_ == 1}}).sum
+    }
+
+    def part2(input: Seq[Instruction]) = {
+      val array = Array.ofDim[Int](1000,1000)
+      input foreach {_.map(array) {
+        case (x, "turn on")  => x + 1
+        case (x, "turn off") => Math.max(0, x - 1)
+        case (x, "toggle")   => x + 2
+      }}
+      (array map {_.sum}).sum
+    }
   }
 
-  def part2(input: Seq[Instruction]) = {
-    val array = Array.ofDim[Int](1000,1000)
-    input foreach {_.map(array) {
-      case (x, "turn on")  => x + 1
-      case (x, "turn off") => Math.max(0, x - 1)
-      case (x, "toggle")   => x + 2
-    }}
-    (array map {_.sum}).sum
+  object Solution extends Test(ProbablyAFireHazard) {
+    Part1 solveFrom "Day06.txt"
+    Part2 solveFrom "Day06.txt"
   }
-}
-
-object Solution extends Test(ProbablyAFireHazard) {
-  Part2 solveFrom "input.txt"
 }

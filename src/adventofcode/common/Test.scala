@@ -1,4 +1,4 @@
-package adventofcode
+package adventofcode.common
 
 import scala.io.Source
 

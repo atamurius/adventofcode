@@ -1,6 +1,6 @@
-package adventofcode.day16
+package adventofcode
 
-import adventofcode.{Test, Puzzle}
+import adventofcode.common.{Test, Puzzle}
 
 /** --- Day 16: Aunt Sue ---
   *
@@ -58,63 +58,66 @@ import adventofcode.{Test, Puzzle}
   *
   * What is the number of the real Aunt Sue?
   */
-case class Aunt(name: String, props: Map[String,Int])
+object Day16 {
 
-case object AuntSue extends Puzzle[Seq[Aunt],String] {
+  case class Aunt(name: String, props: Map[String,Int])
 
-  var facts = Map[String,Int]()
+  case object AuntSue extends Puzzle[Seq[Aunt],String] {
 
-  def parse(input: String) = {
-    val aunt = """\s*(\w+[^:]*): (.*\S)\s*""".r
-    val fact = """(\w+): (\d+)""".r
-    input split "[\n\r]+" map {
-      case aunt(name, factsStr) =>
-        val facts = fact findAllMatchIn factsStr map {m => (m group 1) -> (m group 2).toInt}
-        Aunt(name, Map(facts.toSeq : _*))
-      case other => throw new IllegalArgumentException(s"Parsing failed: '${other}' is not valid aunt")
+    var facts = Map[String,Int]()
+
+    def parse(input: String) = {
+      val aunt = """\s*(\w+[^:]*): (.*\S)\s*""".r
+      val fact = """(\w+): (\d+)""".r
+      input split "[\n\r]+" map {
+        case aunt(name, factsStr) =>
+          val facts = fact findAllMatchIn factsStr map {m => (m group 1) -> (m group 2).toInt}
+          Aunt(name, Map(facts.toSeq : _*))
+        case other => throw new IllegalArgumentException(s"Parsing failed: '$other' is not valid aunt")
+      }
+    }
+
+    def find(aunts: Seq[Aunt], facts: Map[String,Int => Boolean]) = (aunts filter {a =>
+      facts forall {case (name,fact) => ! (a.props contains name) || fact(a.props(name))}
+    }).toList match {
+      case Nil => "Nothing"
+      case List(Aunt(name,_)) => name
+      case _ => "Undefined"
+    }
+
+    def eq(x: Int)(y: Int) = x == y
+    def lt(x: Int)(y: Int) = x >  y
+    def gt(x: Int)(y: Int) = x <  y
+
+    def part1(input: Seq[Aunt]) = find(input, facts mapValues eq)
+
+    def part2(input: Seq[Aunt]) = {
+      val facts = this.facts map {
+        case (t@"cats",        n) => (t, gt(n) _)
+        case (t@"trees",       n) => (t, gt(n) _)
+        case (t@"pomeranians", n) => (t, lt(n) _)
+        case (t@"goldfish",    n) => (t, lt(n) _)
+        case (t, n) => (t, eq(n) _)
+      }
+      find(input, facts)
     }
   }
 
-  def find(aunts: Seq[Aunt], facts: Map[String,Int => Boolean]) = (aunts filter {a =>
-    facts forall {case (name,fact) => ! (a.props contains name) || fact(a.props(name))}
-  }).toList match {
-    case Nil => "Nothing"
-    case List(Aunt(name,_)) => name
-    case _ => "Undefined"
+  object Solution extends Test(AuntSue) {
+
+    puzzle.facts = Map(
+      "children" -> 3,
+      "cats" -> 7,
+      "samoyeds" -> 2,
+      "pomeranians" -> 3,
+      "akitas" -> 0,
+      "vizslas" -> 0,
+      "goldfish" -> 5,
+      "trees" -> 3,
+      "cars" -> 2,
+      "perfumes" -> 1)
+
+    Part1 solveFrom "Day16.txt"
+    Part2 solveFrom "Day16.txt"
   }
-
-  def eq(x: Int)(y: Int) = x == y
-  def lt(x: Int)(y: Int) = x >  y
-  def gt(x: Int)(y: Int) = x <  y
-
-  def part1(input: Seq[Aunt]) = find(input, facts mapValues eq)
-
-  def part2(input: Seq[Aunt]) = {
-    val facts = this.facts map {
-      case (t@"cats",        n) => (t, gt(n) _)
-      case (t@"trees",       n) => (t, gt(n) _)
-      case (t@"pomeranians", n) => (t, lt(n) _)
-      case (t@"goldfish",    n) => (t, lt(n) _)
-      case (t, n) => (t, eq(n) _)
-    }
-    find(input, facts)
-  }
-}
-
-object Solution extends Test(AuntSue) {
-
-  puzzle.facts = Map(
-    "children" -> 3,
-    "cats" -> 7,
-    "samoyeds" -> 2,
-    "pomeranians" -> 3,
-    "akitas" -> 0,
-    "vizslas" -> 0,
-    "goldfish" -> 5,
-    "trees" -> 3,
-    "cars" -> 2,
-    "perfumes" -> 1)
-
-  Part1 solveFrom "aunts.txt"
-  Part2 solveFrom "aunts.txt"
 }
