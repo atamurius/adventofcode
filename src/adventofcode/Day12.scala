@@ -82,7 +82,17 @@ object Day12 {
 
     def takeSome(p: Char => Boolean) = takeWhile(p) filter {_.nonEmpty}
 
+    def literal(text: Text): Parser[Text] = text match {
+      case Nil => just(Nil)
+      case t :: ts => for {
+        c <- pick
+        if c == t
+        cs <- literal(ts)
+      } yield c :: cs
+    }
+
     implicit def char(c: Char): Parser[Char] = pick filter {_ == c}
+    implicit def string(s: String): Parser[String] = literal(s.toList) map {_.mkString}
   }
 
   object Json {
@@ -99,22 +109,34 @@ object Day12 {
 
     case class Str(value: String) extends Value
 
+    case object Null extends Value
+
+    case class Bool(value: Boolean) extends Value
+
     // --- implicit conversions
 
     implicit def toNum(n: Int): Number = Number(n)
     implicit def toStr(s: String): Str = Str(s)
     implicit def toArr(xs: List[Value]): Array = Array(xs)
     implicit def toObj(ps: Map[String,Value]): Object = Object(ps)
+    implicit def toNull(v: Nothing): Value = Null
+    implicit def toBool(v: Boolean): Value  = Bool(v)
 
     def array(xs: Value*) = Array(List(xs : _*))
 
-    // -- parsers ---
-
-    import Character.isDigit
+    import Character.{isDigit,isWhitespace}
 
     import Parser._
 
-    lazy val VALUE: Parser[Value] = NUMBER | STRING | ARRAY | OBJECT
+    // --- SYNTAX ------------------------------------------------------------------------------
+
+    lazy val VALUE: Parser[Value] = NUMBER | STRING | ARRAY | OBJECT | NULL | BOOL
+
+    val NULL = string("null") map
+      {_ => Null}
+
+    val BOOL = ("true" | "false") map
+      {v => Bool(v == "true")}
 
     val NUMBER = ('-' | just('+')) <+> takeSome(isDigit) map
       {case (sign, digits) => Number((sign :: digits).mkString.toInt)}
@@ -129,6 +151,8 @@ object Day12 {
 
     val OBJECT = '{' +> (PROPERTY \* ',') <+ '}' map
       {xs => Object(xs.toMap)}
+
+    // --- /SYNTAX -----------------------------------------------------------------------------
 
     def parse(text: String): Value = VALUE(text)
   }
@@ -169,6 +193,8 @@ object Day12_Solution extends Test(Day12.JSAbacusFramework) {
     "-23"               -> -23,
     "\"\""              -> "",
     "\"test\""          -> "test",
+    "null"              -> Null,
+    "true"              -> true,
     "[]"                -> Nil,
     "[1]"               -> array(1),
     "[1,2]"             -> array(1,2),
