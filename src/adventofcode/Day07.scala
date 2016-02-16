@@ -2,6 +2,8 @@ package adventofcode
 
 import adventofcode.common.{Puzzle, Test}
 
+import scala.collection.immutable.SortedMap
+
 /** --- Day 7: Some Assembly Required ---
  *
  * This year, Santa brought little Bobby Tables a set of wires and bitwise logic gates!

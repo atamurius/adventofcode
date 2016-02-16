@@ -1,6 +1,6 @@
 package adventofcode
 
-import adventofcode.common.Puzzle
+import adventofcode.common.{Test, Puzzle}
 
 /** --- Day 17: No Such Thing as Too Much ---
   *

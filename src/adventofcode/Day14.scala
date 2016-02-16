@@ -1,6 +1,6 @@
 package adventofcode
 
-import adventofcode.common.Puzzle
+import adventofcode.common.{Test, Puzzle}
 
 /** --- Day 14: Reindeer Olympics ---
   *

@@ -1,5 +1,8 @@
 package adventofcode
 
+import java.lang.Object
+
+import adventofcode.Day12.Json.Object
 import adventofcode.common.{Puzzle, Test}
 
 import scala.annotation.tailrec
@@ -18,103 +21,68 @@ import scala.annotation.tailrec
   */
 object Day12 {
 
+  /** Parser combinators */
   object Parser {
 
-    /** Parsing data is list of chars */
-    type Data = List[Char]
+    type Text = List[Char]
 
-    /** Parsing result is
-      *   None if text cannot be parsed or
-      *   parsed value with the rest of the text if parsed successfully
-      */
-    type Result[T] = Option[(T, Data)]
+    type Result[+T] = List[(T,Text)]
 
-    def parser[T](parse: Data => Result[T]) = new Parser[T](parse)
-    def apply[T] = parser[T] _
+    implicit def parser[T](p: Text => Result[T]): Parser[T] = new Parser(p)
 
-    def failed(msg: String) = throw new IllegalArgumentException(msg)
+    /** Parser operators */
+    class Parser[+A](val parse: Text => Result[A]) {
 
-    /** Parser is function from Data to Result */
-    class Parser[T](parse: Data => Result[T]) {
+      private def parsed[B](f: Result[A] => Result[B]): Parser[B] = parser(text => f(parse(text)))
 
-      def apply(data: Data) = parse(data)
+      def apply(text: Text) = parse(text)
 
-      def apply(text: String) = parse(text.toList) map {
-        case (some, Nil) => some
-        case (res, rest) => failed(s"Unexpected tail: $res --> ${rest.mkString}")
+      def apply(text: String): A = {
+        val result = parse(text.toList)
+        result find {_._2.isEmpty} map {_._1} getOrElse { result match {
+          case Nil => throw new IllegalArgumentException(s"Cannot parse $text")
+          case (v,rest) :: _ => throw new IllegalArgumentException(s"Value $v parsed, but unexpected tail: $rest")
+        }}
       }
 
-      /** Apply function when parsed */
-      def parsed[B](f: Result[T] => Result[B]) = new Parser[B](data => f(parse(data)))
+      def map[B](f: A => B): Parser[B] = parsed(_ map {case (a,rest) => (f(a),rest)})
 
-      /** if this parser cannot parse data then parse with that parser */
-      def or[B >: T](that: Parser[_ <: B]): Parser[B] = parser(data => parse(data) match {
-        case None => that(data)
-        case some => some
-      })
+      def flatMap[B](f: A => Parser[B]): Parser[B] = parsed(_ flatMap {case (a,rest) => f(a)(rest)})
 
-      /** repeat parser 0 or more times and produce list of results */
-      def ** = {
-        @tailrec
-        def parseList(data: Data, xs: List[T] = Nil): Result[List[T]] = parse(data) match {
-          case Some((x, rest)) => parseList(rest, x :: xs)
-          case None => Some(xs.reverse -> data)
-        }
-        parser(parseList(_))
-      }
+      def filter(f: A => Boolean): Parser[A] = parsed(_ filter {case (a,rest) => f(a)})
 
-      /** apply that parser after this, ignore this result */
-      def +>[B] (that: Parser[B]): Parser[B] = for (_ <- this; value <- that) yield value
+      def | [B >: A](other: => Parser[B]): Parser[B] = parser(text => parse(text) ++ other(text))
 
-      /** apply that parser after this, ignore that result */
-      def <+ (that: Parser[_]): Parser[T] = for (value <- this; _ <- that) yield value
+      def <+>[B](other: => Parser[B]): Parser[(A,B)] = for (a <- this; b <- other) yield (a,b)
+      def  +>[B](other: => Parser[B]): Parser[B]     = for (_ <- this; b <- other) yield b
+      def <+ [B](other: => Parser[B]): Parser[A]     = for (a <- this; _ <- other) yield a
 
-      /** apply that parser after this, produce pair of results */
-      def <+>[B] (that: Parser[B]): Parser[(T,B)] = for (a <- this; b <- that) yield (a,b)
+      def \+(sep: => Parser[_]): Parser[List[A]] =
+        this <+> maybe(sep +> this \+ sep) map {case (x,xs) => x :: xs}
 
-      /** produce optional result, None if this parser fails */
-      def ? = this map Some.apply or just(None)
-
-      // --- for loop --
-
-      /** apply function to parsed value if any */
-      def map[B](f: T => B) = parsed(_ map {
-        case (result, data) => (f(result), data)
-      })
-
-      /** apply function to parsed value if any and parse next */
-      def flatMap[B](f: T => Parser[B]) = parsed(_ flatMap {
-        case (result, data) => f(result)(data)
-      })
-
-      /** apply filter to produced value if any */
-      def withFilter(p: T => Boolean) = parsed(_ filter {
-        case (result, data) => p(result)
-      })
+      def \*(sep: => Parser[_]): Parser[List[A]] = maybe(this \+ sep)
     }
 
-    /** do not parse data, just return value */
-    def just[T](t: T): Parser[T] = parser(data => Some(t -> data))
+    /** Always return t */
+    def just[T](t: T) = parser(text => List(t -> text))
 
-    /** parse set of chars where predicate succeeds, but not less than min */
-    def zeroOrMore(p: Char => Boolean, min: Int = 0) = parser(_ span p match {
-      case (some, rest) if some.length >= min => Some((some.mkString, rest))
-      case _ => None
+    def maybe[T](p: Parser[List[T]]) = p | just(Nil)
+
+    /** Parse first char */
+    val pick = parser({
+      case Nil => Nil
+      case c :: text => List(c -> text)
     })
 
-    /** parse set of chars where predicate succeeds, at least 1 */
-    def oneOrMore(p: Char => Boolean): Parser[String] = zeroOrMore(p, 1)
+    def takeWhile(p: Char => Boolean): Parser[Text] = maybe(for {
+      c <- pick
+      if p(c)
+      cs <- takeWhile(p)
+    } yield c :: cs)
 
-    /** try to parse given chars, return them if succeeds */
-    def const(s: String): Parser[String] = parser(data =>
-      if (data startsWith s) Some((s, data drop s.length))
-      else None
-    )
+    def takeSome(p: Char => Boolean) = takeWhile(p) filter {_.nonEmpty}
 
-    /** do not construct parser till parsing */
-    def lazyParser[T](p: => Parser[T]) = parser(data => p(data))
-
-    implicit def toConst(s: String): Parser[String] = const(s)
+    implicit def char(c: Char): Parser[Char] = pick filter {_ == c}
   }
 
   object Json {
@@ -146,35 +114,23 @@ object Day12 {
 
     import Parser._
 
-    lazy val NUMBER = (("-" or just("+")) <+> oneOrMore(isDigit)
-      ) map {
-        case (minus, digits) => Number((minus + digits).toInt)
-      }
+    lazy val VALUE: Parser[Value] = NUMBER | STRING | ARRAY | OBJECT
 
-    lazy val STRING = ("\"" +> zeroOrMore(_ != '"') <+ "\""
-      ) map Str
+    val NUMBER = ('-' | just('+')) <+> takeSome(isDigit) map
+      {case (sign, digits) => Number((sign :: digits).mkString.toInt)}
 
-    lazy val ARRAY = ("[" +> (VALUE <+> ("," +> VALUE).**).? <+ "]"
-      ) map {
-        case None => Array(Nil)
-        case Some((first, rest)) => Array(first :: rest)
-      }
+    val STRING_V = '"' +> takeWhile(_ != '"') <+ '"' map {_.mkString}
+    val STRING = STRING_V map Str
 
-    lazy val PROPERTY = ( STRING <+> ":" <+> VALUE
-      ) map {
-        case ((Str(key),_),value) => key -> value
-      }
+    val ARRAY = '[' +> (VALUE \* ',') <+ ']' map
+      {Array(_)}
 
-    lazy val OBJECT = ( "{" +> (PROPERTY <+> ("," +> PROPERTY).**).? <+ "}"
-      ) map {
-        case None => Object(Map())
-        case Some((first, rest)) => Object((first :: rest).toMap)
-      }
+    val PROPERTY = STRING_V <+ ':' <+> VALUE
 
-    lazy val VALUE: Parser[Value] = lazyParser(NUMBER or STRING or ARRAY or OBJECT)
+    val OBJECT = '{' +> (PROPERTY \* ',') <+ '}' map
+      {xs => Object(xs.toMap)}
 
-
-    def parse(text: String): Value = VALUE(text).get
+    def parse(text: String): Value = VALUE(text)
   }
 
   case object JSAbacusFramework extends Puzzle[Json.Value,Int] {
@@ -200,26 +156,28 @@ object Day12 {
       case _ => 0
     }
   }
+}
 
-  object Solution extends Test(JSAbacusFramework) {
+object Day12_Solution extends Test(Day12.JSAbacusFramework) {
 
-    import Json._
+  import Day12._
+  import Json._
+  import Json.Object
 
-    Test(Json.parse) labeled "parse" forall (
-      "123"               -> 123,
-      "-23"               -> -23,
-      "\"\""              -> "",
-      "\"test\""          -> "test",
-      "[]"                -> Nil,
-      "[1]"               -> array(1),
-      "[1,2]"             -> array(1,2),
-      "[1,\"a\",2]"       -> array(1,"a",2),
-      "{}"                -> Object(Map()),
-      "{\"a\":2}"         -> Object(Map("a" -> 2)),
-      "{\"a\":1,\"b\":2}" -> Object(Map("a" -> 1, "b" -> 2))
+  Test(Json.parse) labeled "parse" forall (
+    "123"               -> 123,
+    "-23"               -> -23,
+    "\"\""              -> "",
+    "\"test\""          -> "test",
+    "[]"                -> Nil,
+    "[1]"               -> array(1),
+    "[1,2]"             -> array(1,2),
+    "[1,\"a\",2]"       -> array(1,"a",2),
+    "{}"                -> Object(Map()),
+    "{\"a\":2}"         -> Object(Map("a" -> 2)),
+    "{\"a\":1,\"b\":2}" -> Object(Map("a" -> 1, "b" -> 2))
     )
 
-    Part1 solveFrom "Day12.json"
-    Part2 solveFrom "Day12.json"
-  }
+  Part1 solveFrom "Day12.json"
+  Part2 solveFrom "Day12.json"
 }
