@@ -27,6 +27,7 @@ import adventofcode.common.{Test, Puzzle}
 object Day19 {
 
   type Rules = Seq[(String,String)]
+  type CRules = Seq[(String,String,Int)]
 
   case object MedicineForRudolph extends Puzzle[(Rules,String),Int] {
 
@@ -53,23 +54,49 @@ object Day19 {
       } yield res
     }
 
-    def search(rules: Rules, start: String, target: String): Option[Int] = {
-      def deep(curr: String, step: Int = 1): Option[Int] = {
-        for {
-          (m, repl) <- rules
+    def search(rules: CRules, start: String, target: String): Option[Int] = {
+      def deep(curr: String, cost: Int = 0): Option[Int] = {
+        if (curr == target)
+            return Some(cost)
+        else for {
+          (m, repl, c) <- rules
           f <- replaces(curr, m, repl)
-          if f.length <= target.length
-          res <- if (f == target) Some(step)
-                 else deep(f, step + 1)
+          res <- deep(f, cost + c)
         } return Some(res)
         None
       }
       deep(start)
     }
 
+    def searchDL(rules: Rules, start: String, target: String) = {
+      def search(current: Set[String], step: Int = 0): Option[Int] =
+        if (current contains target) Some(step)
+        else {
+          println(s"Current size: ${current.size}, total chars: ${current map (_.length) sum}")
+          val next = produce(rules)(current)
+          if (next.isEmpty) None
+          else search(next, step + 1)
+        }
+      search(Set(start))
+    }
+
+    def toCRules(rules: Rules) = rules map {case (a,b) => (a,b,1)}
+
+    def flip(rules: CRules) = rules map {case (a,b,c) => (b,a,c)}
+
+    def extend(rules: CRules): CRules = rules ++ (for {
+      (from1,to1,c1) <- rules
+      (from2,to2,c2) <- rules
+      r <- replaces(to1,from2,to2)
+    } yield (from1, r, c1 + c2))
+
     def part1(input: (Rules, String)) = produce(input._1)(Set(input._2)).size
 
-    def part2(input: (Rules, String)) = search(input._1, "e", input._2) getOrElse -1
+    def part2(input: (Rules, String)) = {
+      val rules = extend(toCRules(input._1)) sortBy {-_._2.length}
+      println(rules map {case (a,b,c) => s"$a -$c-> $b"} mkString "\n")
+      search(flip(rules),input._2,"e") getOrElse -1
+    }
   }
 }
 
