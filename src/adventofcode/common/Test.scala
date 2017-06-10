@@ -9,11 +9,11 @@ class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
   class Case[R](label: String, actual: R) {
     def gives(expected: R) {
       if (actual != expected) {
-        println(s"[ERR] ${puzzle.title} $label expected to be $expected, but is $actual")
+        print(RED, s"[ERR] ${puzzle.title} $label expected to be $expected, but is $actual")
         testFailed = true
       }
       else
-        println(s"[OK ] $label passed")
+        print(GREEN, s"[OK ] $label passed")
     }
   }
 
@@ -24,7 +24,9 @@ class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
       val start = System.currentTimeMillis
       val result = f(puzzle parse input)
       val time = (System.currentTimeMillis - start)/1000D
-      println(s"${puzzle.title}:\n[***] The solution of $name is $result\n[***] Time: ${time}s")
+      println(s"${puzzle.title}:")
+      print(YELLOW, s"[***] The solution of $name is $result")
+      print(YELLOW, s"[***] Time: ${time}s")
     }
     def solveFrom(file: String): Unit = {
       solve(Source.fromFile(
@@ -35,6 +37,8 @@ class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
 
   private var testCnt = 0
 
+
+
   case class Test[A,B](f: A => B) {
     var label = s"Test ${testCnt += 1}"
     def labeled(label: String) = { this.label = label; this }
@@ -42,16 +46,23 @@ class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
     def forall(pairs: (A,B)*) = pairs foreach {case (arg, expected) =>
       val actual = f(arg)
       if (actual != expected) {
-        println(s"[ERR] ${puzzle.title} $label on $arg expected to be $expected, but is $actual")
+        print(RED, s"[ERR] ${puzzle.title} $label on $arg expected to be $expected, but is $actual")
         testFailed = true
       }
       else
-        println(s"[OK ] $label on $arg passed")
+        print(GREEN, s"[OK ] $label on $arg passed")
     }
   }
 
   object Part1 extends Part("Part 1", puzzle.part1)
   object Part2 extends Part("Part 2", puzzle.part2)
 
+  private val RED = "31"
+  private val GREEN = "32"
+  private val YELLOW = "33"
+  private val ctrl = 0x1b.asInstanceOf[Char]
+  private def print(color: String, text: String): Unit = {
+    println(s"$ctrl[${color}m$text$ctrl[0m")
+  }
 }
 
