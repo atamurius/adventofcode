@@ -2,8 +2,6 @@ package adventofcode
 
 import adventofcode.common.{Puzzle, Test}
 
-import scala.annotation.tailrec
-
 /** --- Day 20: Infinite Elves and Infinite Houses ---
   *
   * To keep the Elves busy, Santa has them deliver some presents by hand, door-to-door.

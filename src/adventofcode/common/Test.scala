@@ -6,6 +6,14 @@ class Test[D,T,P](val puzzle: P with Puzzle[D,T]) extends App {
 
   private var testFailed = false
 
+  def assert(descr: String)(f: => Boolean): Unit = {
+    if (f) {
+      print(GREEN, s"[OK ] $descr")
+    } else {
+      print(RED, s"[ERR] ${puzzle.title} failed: $descr")
+    }
+  }
+
   class Case[R](label: String, actual: R) {
     def gives(expected: R) {
       if (actual != expected) {
