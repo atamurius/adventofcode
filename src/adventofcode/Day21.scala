@@ -43,15 +43,10 @@ object Day21 {
     def damageScore: Int = damage + equipment.iterator.map { _.damage }.sum
 
     def attackedBy(attacker: Character): Character = copy(
-      hitPoints = hitPoints - (1 max (attacker.damageScore - armorScore))
+      hitPoints = hitPoints - ((attacker.damageScore - armorScore) max 1)
     )
 
     override def toString = s"$name ($hitPoints)"
-
-    override def equals(obj: scala.Any): Boolean = obj != null && obj.isInstanceOf[Character] &&
-      obj.asInstanceOf[Character].name == name
-
-    override def hashCode(): Int = name.hashCode
   }
 
   case class Item(name: String,
