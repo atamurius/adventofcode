@@ -325,6 +325,7 @@ object Day22 {
         val next = apply(action)
         if (! f(next, {() => next.traverse(f)})) return
       }
+    def withEffect(e: Effect): State = { turn.addEffect(e); this }
   }
   case class InitialState(turn: Turn) extends State
   case class Move(previous: State, action: Action, turn: Turn) extends State
@@ -335,28 +336,8 @@ object Day22 {
       case List(hp, d) => new Boss(hp.toInt, d.toInt)
     }
 
-    override def part1(boss: Boss): Int = {
+    private def findMinimalMana(game: State) = {
       var bestSolution = Int.MaxValue
-      (new Player(hitPoints = 50, mana = 500) --> boss).traverse { (state, next) =>
-        state.turn.result match {
-          case Some(_: Player) =>
-            val spells = state.spells.reverse
-            if (state.spentMana < bestSolution) {
-              printf("[%s] %10d %s\n", LocalTime.now(), state.spentMana, spells.map { _.name.charAt(0) }.mkString)
-              bestSolution = state.spentMana
-            }
-          case None if state.spentMana < bestSolution => next()
-          case _ =>
-        }
-        state.spentMana < bestSolution
-      }
-      bestSolution
-    }
-
-    override def part2(boss: Boss): Int = {
-      var bestSolution = Int.MaxValue
-      val game = new Player(hitPoints = 50, mana = 500) --> boss
-      game.turn.addEffect(Hell)
       game.traverse { (state, next) =>
         state.turn.result match {
           case Some(_: Player) =>
@@ -371,6 +352,14 @@ object Day22 {
         state.spentMana < bestSolution
       }
       bestSolution
+    }
+
+    override def part1(boss: Boss): Int = {
+      findMinimalMana(new Player(hitPoints = 50, mana = 500) --> boss)
+    }
+
+    override def part2(boss: Boss): Int = {
+      findMinimalMana(new Player(hitPoints = 50, mana = 500) --> boss withEffect Hell)
     }
   }
 
